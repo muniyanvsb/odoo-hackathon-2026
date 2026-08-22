@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id            String         @id @default(uuid())
+  employeeId    String         @unique
+  email         String         @unique
+  passwordHash  String
+  name          String
+  role          String         // "EMPLOYEE" | "HR"
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  profile       Profile?
+  attendances   Attendance[]
+  leaveRequests LeaveRequest[]
+  payrollLogs   PayrollLog[]
+}
+
+model Profile {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address           String?
+  phone             String?
+  profilePictureUrl String?
+  jobTitle          String?
+  department        String?
+  joinDate          DateTime @default(now())
+  salaryBasic       Float    @default(0.0)
+  salaryHRA         Float    @default(0.0)
+  salaryAllowance   Float    @default(0.0)
+  salaryDeductions  Float    @default(0.0)
+  documents         String   @default("[]") // JSON list of document URLs
+}
+
+model Attendance {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date         String    // YYYY-MM-DD
+  checkInTime  DateTime
+  checkOutTime DateTime?
+  status       String    // "PRESENT" | "ABSENT" | "HALF_DAY" | "LEAVE"
+  remarks      String?
+}
+
+model LeaveRequest {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaveType     String    // "PAID" | "SICK" | "UNPAID"
+  startDate     String    // YYYY-MM-DD
+  endDate       String    // YYYY-MM-DD
+  remarks       String?
+  status        String    @default("PENDING") // "PENDING" | "APPROVED" | "REJECTED"
+  adminComment  String?
+  approvedById  String?
+  createdAt     DateTime  @default(now())
+}
+
+model PayrollLog {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  month          String   // YYYY-MM
+  basicPaid      Float
+  hraPaid        Float
+  allowancePaid  Float
+  deductionsPaid Float
+  netSalary      Float
+  status         String   @default("DRAFT") // "DRAFT" | "PAID"
+  processedDate  DateTime @default(now())
+  processedById  String?
+}
+
