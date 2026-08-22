@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartHR - Human Resources Management System</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #e0f2fe, #f3e8ff, #fce7f3);
+            color: #1f2937;
+        }
+
+        header {
+            background: linear-gradient(135deg, #4f46e5, #9333ea, #ec4899);
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 30px auto;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .card {
+            color: white;
+            padding: 25px;
+            text-align: center;
+            border-radius: 15px;
+        }
+
+        .card:nth-child(1) { background: #2563eb; }
+        .card:nth-child(2) { background: #16a34a; }
+        .card:nth-child(3) { background: #f97316; }
+        .card:nth-child(4) { background: #9333ea; }
+
+        .card p {
+            font-size: 30px;
+            font-weight: bold;
+            margin: 10px;
+        }
+
+        .form-section,
+        .employee-section {
+            background: white;
+            margin-top: 30px;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px #ccc;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        input, select {
+            padding: 14px;
+            border: 2px solid #d8b4fe;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 14px 30px;
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #ec4899;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #4f46e5;
+            color: white;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .active {
+            color: green;
+            font-weight: bold;
+        }
+
+        .leave {
+            color: orange;
+            font-weight: bold;
+        }
+
+        .delete-btn {
+            background: #ef4444;
+            margin: 0;
+            padding: 8px 12px;
+        }
+
+        footer {
+            margin-top: 40px;
+            background: #1e293b;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>🏢 SmartHR</h1>
+    <p>Human Resources Management System</p>
+</header>
+
+<div class="container">
+
+    <!-- Dashboard -->
+    <section class="dashboard">
+        <div class="card">
+            <h3>Total Employees</h3>
+            <p id="totalEmployees">0</p>
+        </div>
+
+        <div class="card">
+            <h3>Present Today</h3>
+            <p id="presentEmployees">0</p>
+        </div>
+
+        <div class="card">
+            <h3>On Leave</h3>
+            <p id="leaveEmployees">0</p>
+        </div>
+
+        <div class="card">
+            <h3>Departments</h3>
+            <p id="departmentCount">0</p>
+        </div>
+    </section>
+
+
+    <!-- Add Employee Form -->
+    <section class="form-section">
+
+        <h2>➕ Add New Employee</h2>
+
+        <div class="form-grid">
+
+            <input type="text" id="name"
+                   placeholder="Enter Employee Name">
+
+            <input type="text" id="employeeId"
+                   placeholder="Enter Employee ID">
+
+            <input type="email" id="email"
+                   placeholder="Enter Email Address">
+
+            <input type="text" id="department"
+                   placeholder="Enter Department">
+
+            <input type="text" id="position"
+                   placeholder="Enter Job Position">
+
+            <select id="status">
+                <option value="">Select Status</option>
+                <option value="Present">Present</option>
+                <option value="On Leave">On Leave</option>
+            </select>
+
+        </div>
+
+        <button onclick="addEmployee()">➕ Add Employee</button>
+
+    </section>
+
+
+    <!-- Employee Table -->
+    <section class="employee-section">
+
+        <h2>👥 Employee Management</h2>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Employee ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Department</th>
+                    <th>Position</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="employeeTable">
+            </tbody>
+
+        </table>
+
+    </section>
+
+</div>
+
+
+<footer>
+    <p>SmartHR © 2026 | Hackathon Project</p>
+</footer>
+
+
+<script>
+
+let employees = [];
+
+
+function addEmployee() {
+
+    // Get entered data
+    const name = document.getElementById("name").value.trim();
+    const employeeId = document.getElementById("employeeId").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const department = document.getElementById("department").value.trim();
+    const position = document.getElementById("position").value.trim();
+    const status = document.getElementById("status").value;
+
+
+    // Check empty fields
+    if (
+        name === "" ||
+        employeeId === "" ||
+        email === "" ||
+        department === "" ||
+        position === "" ||
+        status === ""
+    ) {
+        alert("Please enter all employee details!");
+        return;
+    }
+
+
+    // Check duplicate ID
+    const duplicate = employees.some(
+        employee => employee.employeeId === employeeId
+    );
+
+    if (duplicate) {
+        alert("Employee ID already exists!");
+        return;
+    }
+
+
+    // Create employee object
+    const employee = {
+        name: name,
+        employeeId: employeeId,
+        email: email,
+        department: department,
+        position: position,
+        status: status
+    };
+
+
+    // Add to array
+    employees.push(employee);
+
+
+    // Update table and dashboard
+    displayEmployees();
+    updateDashboard();
+
+
+    // Clear form
+    document.getElementById("name").value = "";
+    document.getElementById("employeeId").value = "";
+    document.getElementById("email").value = "";
+    document.getElementById("department").value = "";
+    document.getElementById("position").value = "";
+    document.getElementById("status").value = "";
+}
+
+
+function displayEmployees() {
+
+    const table = document.getElementById("employeeTable");
+
+    table.innerHTML = "";
+
+
+    employees.forEach(function(employee, index) {
+
+        let statusClass = "";
+
+        if (employee.status === "Present") {
+            statusClass = "active";
+        } else {
+            statusClass = "leave";
+        }
+
+
+        table.innerHTML += `
+            <tr>
+                <td>${employee.employeeId}</td>
+                <td>${employee.name}</td>
+                <td>${employee.email}</td>
+                <td>${employee.department}</td>
+                <td>${employee.position}</td>
+
+                <td class="${statusClass}">
+                    ${employee.status}
+                </td>
+
+                <td>
+                    <button class="delete-btn"
+                        onclick="deleteEmployee(${index})">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+
+function deleteEmployee(index) {
+
+    employees.splice(index, 1);
+
+    displayEmployees();
+    updateDashboard();
+}
+
+
+function updateDashboard() {
+
+    // Total Employees
+    document.getElementById("totalEmployees").innerText =
+        employees.length;
+
+
+    // Present Employees
+    const present = employees.filter(
+        employee => employee.status === "Present"
+    ).length;
+
+    document.getElementById("presentEmployees").innerText =
+        present;
+
+
+    // Employees on Leave
+    const leave = employees.filter(
+        employee => employee.status === "On Leave"
+    ).length;
+
+    document.getElementById("leaveEmployees").innerText =
+        leave;
+
+
+    // Count unique departments
+    const departments = new Set(
+        employees.map(employee => employee.department)
+    );
+
+    document.getElementById("departmentCount").innerText =
+        departments.size;
+}
+
+</script>
+
+</body>
+</html>
